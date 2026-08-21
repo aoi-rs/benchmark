@@ -59,14 +59,14 @@ class RedirectUser(FastHttpUser):
     @task
     def resolve_short_url(self) -> None:
         slug = choose_slug()
-        response = self.client.get(
+
+        with self.client.get(
             f"/{slug}",
             name="[Redirects] Resolve short URL",
             allow_redirects=False,
             catch_response=True,
-        )
-
-        if response.status_code in (301, 308):
-            response.success()
-        else:
-            response.failure(f"Expected 301 or 308 redirect for /{slug}, got status {response.status_code}.")
+        ) as response:
+            if response.status_code in (301, 308):
+                response.success()
+            else:
+                response.failure(f"Expected 301 or 308 redirect for /{slug}, got status {response.status_code}.")
