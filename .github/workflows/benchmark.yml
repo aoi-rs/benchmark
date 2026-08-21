@@ -1,0 +1,81 @@
+name: aoi.rs redirect benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      users:
+        description: Locust users to simulate
+        required: false
+        default: "4000"
+      spawn_rate:
+        description: Locust spawn rate
+        required: false
+        default: "40"
+      run_time:
+        description: Locust run time
+        required: false
+        default: "2m"
+      zipf_exponent:
+        description: Zipf exponent for slug popularity
+        required: false
+        default: "1.1"
+  schedule:
+    - cron: "0 3 * * 1"
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AOI_PAT: ${{ secrets.AOI_PAT }}
+      ZIPF_EXPONENT: ${{ inputs.zipf_exponent || '1.1' }}
+      LOCUST_HOST: https://aoi.rs
+      LOCUST_USERS: ${{ inputs.users || '4000' }}
+      # LOCUST_TARGET_RPS can be set manually; per-user default is 5 in the locustfile
+      LOCUST_SPAWN_RATE: ${{ inputs.spawn_rate || '40' }}
+      LOCUST_RUN_TIME: ${{ inputs.run_time || '2m' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Install project dependencies
+        run: uv sync --locked
+
+      - name: Validate slug input
+        shell: bash
+        run: |
+          if [[ ! -s slugs.txt ]]; then
+            echo "slugs.txt is missing or empty. Generate it in advance with scripts/create_links.py and commit or supply it as an artifact/input."
+            exit 1
+          fi
+
+      - name: Run headless Locust benchmark
+        shell: bash
+        run: |
+          mkdir -p results
+          uv run locust \
+            -f load_tests/locustfile.py \
+            --host "$LOCUST_HOST" \
+            --headless \
+            --users "$LOCUST_USERS" \
+            --spawn-rate "$LOCUST_SPAWN_RATE" \
+            --run-time "$LOCUST_RUN_TIME" \
+            --csv results/aoi_redirects \
+            --html results/aoi_redirects.html
+
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aoi-load-test-results
+          path: |
+            results/*.csv
+            results/*.html
+            results/*.log
+          if-no-files-found: error
