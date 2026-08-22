@@ -34,6 +34,8 @@ jobs:
       # LOCUST_TARGET_RPS can be set manually; per-user default is 5 in the locustfile
       LOCUST_SPAWN_RATE: ${{ inputs.spawn_rate || '40' }}
       LOCUST_RUN_TIME: ${{ inputs.run_time || '2m' }}
+      # Number of locust processes to spawn on the runner. Use -1 to auto-detect cores.
+      LOCUST_PROCESSES: ${{ inputs.processes || '-1' }}
 
     steps:
       - name: Check out repository
@@ -61,6 +63,7 @@ jobs:
           mkdir -p results
           uv run locust \
             -f load_tests/locustfile.py \
+            --processes "$LOCUST_PROCESSES" \
             --host "$LOCUST_HOST" \
             --headless \
             --users "$LOCUST_USERS" \
