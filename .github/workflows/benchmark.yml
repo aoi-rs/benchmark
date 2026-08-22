@@ -35,7 +35,7 @@ jobs:
       LOCUST_SPAWN_RATE: ${{ inputs.spawn_rate || '40' }}
       LOCUST_RUN_TIME: ${{ inputs.run_time || '2m' }}
       # Number of locust processes to spawn on the runner. Use -1 to auto-detect cores.
-      LOCUST_PROCESSES: ${{ inputs.processes || '-1' }}
+      LOCUST_PROCESSES: '-1'
 
     steps:
       - name: Check out repository
