@@ -10,11 +10,11 @@ on:
       spawn_rate:
         description: Locust spawn rate
         required: false
-        default: "40"
+        default: "100"
       run_time:
         description: Locust run time
         required: false
-        default: "2m"
+        default: "3m"
       zipf_exponent:
         description: Zipf exponent for slug popularity
         required: false
@@ -32,8 +32,8 @@ jobs:
       LOCUST_HOST: https://aoi.rs
       LOCUST_USERS: ${{ inputs.users || '4000' }}
       # LOCUST_TARGET_RPS can be set manually; per-user default is 5 in the locustfile
-      LOCUST_SPAWN_RATE: ${{ inputs.spawn_rate || '40' }}
-      LOCUST_RUN_TIME: ${{ inputs.run_time || '2m' }}
+      LOCUST_SPAWN_RATE: ${{ inputs.spawn_rate || '100' }}
+      LOCUST_RUN_TIME: ${{ inputs.run_time || '3m' }}
       # Number of locust processes to spawn on the runner. Use -1 to auto-detect cores.
       LOCUST_PROCESSES: '-1'
 
